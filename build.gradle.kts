@@ -1,5 +1,6 @@
 plugins {
-    id("dev.isxander.modstitch.base") version "0.7.1-unstable"
+    id("dev.isxander.modstitch.base") version "0.8.4"
+    id("me.modmuss50.mod-publish-plugin") version "1.1.0"
 }
 
 fun prop(name: String, consumer: (prop: String) -> Unit) {
@@ -37,7 +38,7 @@ modstitch {
         modGroup = property("mod_group_id") as String
         modAuthor = property("mod_authors") as String
 
-        fun <K, V> MapProperty<K, V>.populate(block: MapProperty<K, V>.() -> Unit) {
+        fun <K : Any, V : Any> MapProperty<K, V>.populate(block: MapProperty<K, V>.() -> Unit) {
             block()
         }
 
@@ -171,7 +172,24 @@ stonecutter {
 
 
 dependencies {
-
+    fun Dependency?.jij() = this?.also(::modstitchJiJ)
+    fun String.implementation() = if (modstitch.isModDevGradleLegacy){
+        //avoid the modstitch remap bug on 1.20.1
+        add("modImplementation", this)
+    } else {
+        modstitchModImplementation(this)
+    }
+    fun String.runtimeOnly() = if (modstitch.isModDevGradleLegacy) {
+        add("modRuntimeOnly", this)
+    } else {
+        modstitchModRuntimeOnly(this)
+    }
+    fun String.compileOnly() = if (modstitch.isModDevGradleLegacy) {
+        add("modCompileOnly", this)
+    } else {
+        modstitchModCompileOnly(this)
+    }
+/*
     doLib{
         modstitchModImplementation("maven.modrinth:nirvana-library:$loader-$minecraft-$it")
     }
@@ -179,8 +197,47 @@ dependencies {
     prop("deps.fzzy_config_version"){
         //modstitchModImplementation("maven.modrinth:nirvana-library:$loader-$minecraft-$it")
     }
-
+*/
     prop("deps.fabricapi"){
-        modstitchModImplementation("net.fabricmc.fabric-api:fabric-api:$it")
+        ("net.fabricmc.fabric-api:fabric-api:$it").implementation()
     }
+}
+
+publishMods {
+
+    dryRun.set(false)
+
+    afterEvaluate {
+        file = modstitch.finalJarTask.flatMap { it.archiveFile }
+        this@publishMods.displayName.set(file.map { it.asFile.name })
+    }
+
+
+    changelog = file("../../changelog.md")
+        .takeIf { it.exists() }
+        ?.readLines()
+        ?.joinToString("\n") { line ->
+            if (line.isNotBlank()) {
+                "$line</br>"
+            } else {
+                line
+            }
+        }
+        ?: ""
+    type = ALPHA
+    modLoaders.add(loader)
+
+
+
+    curseforge {
+        accessToken = ""
+        projectId = ""
+        minecraftVersions.add(minecraft)
+        //serverRequired = false
+        //clientRequired = true
+        //javaVersions.set(listOf<JavaVersion>(JavaVersion.VERSION_17))
+        requires("")
+
+    }
+
 }
