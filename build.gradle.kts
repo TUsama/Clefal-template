@@ -68,7 +68,7 @@ modstitch {
 
             propLib{
                 put("lib_version", it)
-                put("common_networking_version", property("deps.common_networking_ingame_version") as String)
+                put("common_networking_version", property("deps.common_networking") as String)
             }
 
             put("target_minecraft", minecraft)
@@ -230,6 +230,7 @@ dependencies {
 
     propLib{
         "maven.modrinth:nirvana-library:$loader-$minecraft-$it".implementation()
+        "mysticdrew:common-networking-$loader:${property("deps.common_networking") as String}".implementation()
     }
 
     prop("deps.fzzy_config_version"){
@@ -263,11 +264,11 @@ dependencies {
     }
 
     //lombok
-    modstitchCompileOnly("org.projectlombok:lombok:1.18.34")
-    annotationProcessor("org.projectlombok:lombok:1.18.34")
+    modstitchCompileOnly("org.projectlombok:lombok:1.18.36")
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
 
-    testCompileOnly("org.projectlombok:lombok:1.18.34")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
+    testCompileOnly("org.projectlombok:lombok:1.18.36")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.36")
 }
 
 publishMods {
