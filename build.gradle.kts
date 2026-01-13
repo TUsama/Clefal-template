@@ -12,7 +12,7 @@ val mod_id = property("mod_id") as String
 val minecraft = property("deps.minecraft") as String
 val libVersion = findProperty("deps.lib_version") as String?
 val minecraftVersionSplit = minecraft.split('.')
-fun doLib(consumer: (prop: String) -> Unit){
+fun propLib(consumer: (prop: String) -> Unit){
     libVersion?.takeIf { it.isNotEmpty() }?.let { consumer }
 }
 
@@ -47,8 +47,12 @@ modstitch {
             // modstitch doesn't initially support. Some examples below.
             put("mod_issue_tracker", property("mod_issue") as String)
             put("pack_format", when (property("deps.minecraft")) {
-                "1.20.1" -> 15
-                "1.21.4" -> 46
+                    "1.20.1" -> 15
+                    "1.21.1" -> 34
+                    "1.21.4" -> 46
+                    "1.21.8" -> 64
+                    "1.21.10" -> 69
+                    "1.21.11" -> 70.0
                 else -> throw IllegalArgumentException("Please store the resource pack version for ${property("deps.minecraft")} in build.gradle.kts! https://minecraft.wiki/w/Pack_format")
             }.toString())
 
@@ -56,9 +60,27 @@ modstitch {
                 put("fzzy_config_version", it)
             }
 
-            doLib{
+            propLib{
                 put("lib_version", it)
+                put("common_networking_version", property("deps.common_networking_ingame_version") as String)
             }
+
+            put("target_minecraft", minecraft)
+            put(
+                "target_loader", when (loader) {
+                    "neoforge" -> property("deps.neoforge") as String
+                    else -> ""
+                }
+            )
+            put("loader", loader)
+            put(
+                "target_fabricloader", when (loader) {
+                    "fabric" -> property("deps.fabric_loader") as String
+                    else -> ""
+                }
+            )
+
+            put("target_forge", findProperty("deps.forge") as? String ?: "")
 
         }
     }
@@ -189,15 +211,47 @@ dependencies {
     } else {
         modstitchModCompileOnly(this)
     }
-/*
-    doLib{
-        modstitchModImplementation("maven.modrinth:nirvana-library:$loader-$minecraft-$it")
+
+    val fzzyConfigVersion = findProperty("deps.fzzy_config_version")
+    val fzzyMinecraftVersion = when (minecraft) {
+        "1.21.1" -> "1.21"
+        "1.21.4" -> "1.21.3"
+        "1.21.8" -> "1.21.6"
+        "1.21.10" -> "1.21.9"
+        else -> minecraft
+    }
+    var fzzyString : String = "";
+
+    propLib{
+        "maven.modrinth:nirvana-library:$loader-$minecraft-$it".implementation()
     }
 
     prop("deps.fzzy_config_version"){
-        //modstitchModImplementation("maven.modrinth:nirvana-library:$loader-$minecraft-$it")
+        modstitch.loom {
+            val fabricApi = property("deps.fabric_api") as String
+            modstitchModImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApi}+${minecraft}")
+            fzzyString = "me.fzzyhmstrs:fzzy_config:${fzzyConfigVersion}+${fzzyMinecraftVersion}";
+
+        }
+
+        modstitch.moddevgradle {
+            if (modstitch.isModDevGradleLegacy){
+                fzzyString = "me.fzzyhmstrs:fzzy_config:${fzzyConfigVersion}+${fzzyMinecraftVersion}+forge";
+            } else {
+                if (minecraft == "1.21.8"){
+                    fzzyString = "me.fzzyhmstrs:fzzy_config:${fzzyConfigVersion}+1.21.7+neoforge";
+                } else {
+                    fzzyString = "me.fzzyhmstrs:fzzy_config:${fzzyConfigVersion}+${fzzyMinecraftVersion}+neoforge"
+                }
+
+            }
+
+        }
+
+        modstitchModCompileOnly(fzzyString)
+        (fzzyString).runtimeOnly()
     }
-*/
+
     prop("deps.fabricapi"){
         ("net.fabricmc.fabric-api:fabric-api:$it").implementation()
     }
