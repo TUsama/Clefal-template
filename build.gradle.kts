@@ -21,12 +21,18 @@ var loader: String = name.split("-")[1]
 
 modstitch {
     minecraftVersion = minecraft
-    javaVersion = if (modstitch.isModDevGradleLegacy) 17 else 21
+    javaVersion = when (minecraft){
+        "1.20.1" -> 17
+        else -> 21
+    }
 
     // If parchment doesnt exist for a version yet you can safely
     // omit the "deps.parchment" property from your versioned gradle.properties
     parchment {
-        prop("deps.parchment") { mappingsVersion = it }
+        prop("deps.parchment") {
+            if (minecraft == "1.21.1") minecraftVersion.set("1.21")
+            mappingsVersion = it
+        }
     }
 
     // This metadata is used to fill out the information inside
@@ -255,6 +261,13 @@ dependencies {
     prop("deps.fabricapi"){
         ("net.fabricmc.fabric-api:fabric-api:$it").implementation()
     }
+
+    //lombok
+    modstitchCompileOnly("org.projectlombok:lombok:1.18.34")
+    annotationProcessor("org.projectlombok:lombok:1.18.34")
+
+    testCompileOnly("org.projectlombok:lombok:1.18.34")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
 }
 
 publishMods {
