@@ -3,17 +3,18 @@ plugins {
     id("me.modmuss50.mod-publish-plugin") version "1.1.0"
 }
 
-fun prop(name: String, consumer: (prop: String) -> Unit) {
-    (findProperty(name) as? String?)
-        ?.let(consumer)
-}
 val mod_version = property("mod_version") as String
 val mod_id = property("mod_id") as String
 val minecraft = property("deps.minecraft") as String
 val libVersion = findProperty("deps.lib_version") as String?
 val minecraftVersionSplit = minecraft.split('.')
+fun prop(name: String, consumer: (prop: String) -> Unit) {
+    (findProperty(name) as? String?)?.let{
+        consumer.invoke(it)
+    }
+}
 fun propLib(consumer: (prop: String) -> Unit){
-    libVersion?.takeIf { it.isNotEmpty() }?.let { consumer }
+    prop("deps.lib_version", consumer)
 }
 
 var loader: String = name.split("-")[1]
@@ -93,13 +94,13 @@ modstitch {
 
     loom {
 
-        prop("deps.fabricLoader") { fabricLoaderVersion = it }
-
+        fabricLoaderVersion = "0.16.10"
         // Configure loom like normal in this block.
         configureLoom {
             runConfigs.all {
                 ideConfigGenerated(false)
             }
+            mixin.useLegacyMixinAp = false
         }
     }
 
@@ -228,6 +229,12 @@ dependencies {
     }
     var fzzyString : String = "";
 
+    modstitch.loom{
+    prop("deps.fabric_api"){
+        ("net.fabricmc.fabric-api:fabric-api:$it+${minecraft}").implementation()
+    }
+    }
+
     propLib{
         "maven.modrinth:nirvana-library:$loader-$minecraft-$it".implementation()
         "mysticdrew:common-networking-$loader:${property("deps.common_networking") as String}".implementation()
@@ -235,8 +242,7 @@ dependencies {
 
     prop("deps.fzzy_config_version"){
         modstitch.loom {
-            val fabricApi = property("deps.fabric_api") as String
-            modstitchModImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApi}+${minecraft}")
+
             fzzyString = "me.fzzyhmstrs:fzzy_config:${fzzyConfigVersion}+${fzzyMinecraftVersion}";
 
         }
@@ -259,9 +265,7 @@ dependencies {
         (fzzyString).runtimeOnly()
     }
 
-    prop("deps.fabricapi"){
-        ("net.fabricmc.fabric-api:fabric-api:$it").implementation()
-    }
+
 
     //lombok
     modstitchCompileOnly("org.projectlombok:lombok:1.18.36")

@@ -14,5 +14,12 @@ allprojects {
         mavenLocal()
         maven("https://maven.neoforged.net/releases")
         maven("https://maven.fabricmc.net/")
+        maven("https://api.modrinth.com/maven")
+
+        maven("https://maven.fzzyhmstrs.me/")
+
+        maven("https://cursemaven.com")
+        maven("https://thedarkcolour.github.io/KotlinForForge/")
+        maven ("https://jm.gserv.me/repository/maven-public/")
     }
 }
