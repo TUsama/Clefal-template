@@ -121,20 +121,20 @@ modstitch {
                 register("client") {
                     client()
                 }
-                if(minecraftVersionSplit[2].toInt() >= 4 ){
+                if(minecraftVersionSplit[2].toInt() >= 4 || minecraft == "26.1.2"){
                     register("clientData") {
                         clientData()
-                        programArguments.addAll("--mod", mod_id, "--all", "--output", file("src/generated/resources/").getAbsolutePath(), "--existing", file("src/main/resources/").getAbsolutePath())
+                        programArguments.addAll("--mod", mod_id, "--all", "--output", file("generated").getAbsolutePath(), "--existing", file("../../src/main/resources/").getAbsolutePath())
                     }
 
                     register("serverData") {
                         serverData()
-                        programArguments.addAll("--mod", mod_id, "--all", "--output", file("src/generated/resources/").getAbsolutePath(), "--existing", file("src/main/resources/").getAbsolutePath())
+                        programArguments.addAll("--mod", mod_id, "--all", "--output", file("generated").getAbsolutePath(), "--existing", file("../../src/main/resources/").getAbsolutePath())
                     }
                 } else {
                     register("data") {
                         data()
-                        programArguments.addAll("--mod", mod_id, "--all", "--output", file("src/generated/resources/").getAbsolutePath(), "--existing", file("src/main/resources/").getAbsolutePath())
+                        programArguments.addAll("--mod", mod_id, "--all", "--output", file("generated").getAbsolutePath(), "--existing", file("../../src/main/resources/").getAbsolutePath())
                     }
                 }
 
@@ -174,7 +174,7 @@ modstitch {
         // true, it will automatically be generated.
         addMixinsToModManifest = true
 
-        configs.register("examplemod")
+        configs.register(mod_id)
 
         // Most of the time you wont ever need loader specific mixins.
         // If you do, simply make the mixin file and add it like so for the respective loader:
@@ -265,7 +265,15 @@ dependencies {
         (fzzyString).runtimeOnly()
     }
 
+        prop("deps.jei"){
+        modstitchModCompileOnly("mezz.jei:jei-${minecraft}-${loader}-api:${it}")
+        // at runtime, use the full JEI jar for NeoForge
+        ("mezz.jei:jei-${minecraft}-${loader}:${it}").runtimeOnly()
+    }
 
+    DependencyConfig.getDependencies(loader, minecraft).forEach { dep ->
+            dependencies.add(dep.configuration, dep.notation, dep.options)
+        }
 
     //lombok
     modstitchCompileOnly("org.projectlombok:lombok:1.18.36")

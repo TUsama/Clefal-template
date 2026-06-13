@@ -2,6 +2,7 @@
   "package": "com.example.mymod.mixin",
   "required": true,
   "minVersion": "0.8",
+  "refmap": "example.refmap.json",
   "injectors": {
     "defaultRequire": 1
   },
